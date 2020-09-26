@@ -640,8 +640,165 @@ static const char* const kErrorMessages[VP8_ENC_ERROR_LAST] = {
 };
 
 //------------------------------------------------------------------------------
+#define MV
 
-int main(int argc, const char* argv[]) {
+#ifdef MV
+
+ void saveConfig(WebPConfig * c)
+ {
+  printf("\nConfig:\n");
+  printf("lossless = %d\n", c->lossless ); // int lossless;           // Lossless encoding (0=lossy(default), 1=lossless).
+  printf("quality = %f\n", c->quality );//  float quality;          // between 0 and 100. For lossy, 0 gives the smallest
+                          // size and 100 the largest. For lossless, this
+                          // parameter is the amount of effort put into the
+                          // compression: 0 is the fastest but gives larger
+                          // files compared to the slowest, but best, 100.
+  printf("method = %d\n", c->method );// int method;             // quality/speed trade-off (0=fast, 6=slower-better)
+
+  printf("image_hint = %d\n", c->image_hint );//  WebPImageHint image_hint;  // Hint for image type (lossless only for now).
+
+  printf("target_size = %d\n", c->target_size );//  int target_size;        // if non-zero, set the desired target size in bytes.
+                          // Takes precedence over the 'compression' parameter.
+  printf("target_PSNR = %f\n", c->target_PSNR );//  float target_PSNR;      // if non-zero, specifies the minimal distortion to
+                          // try to achieve. Takes precedence over target_size.
+  printf("segments = %d\n", c->segments );// int segments;           // maximum number of segments to use, in [1..4]
+  
+  printf("sns_strength = %d\n", c->sns_strength );//  int sns_strength;       // Spatial Noise Shaping. 0=off, 100=maximum.
+  
+  printf("filter_strength = %d\n", c->filter_strength );// int filter_strength;    // range: [0 = off .. 100 = strongest]
+  
+  printf("filter_sharpness = %d\n", c->filter_sharpness );// int filter_sharpness;   // range: [0 = off .. 7 = least sharp]
+  
+  printf("filter_type = %d\n", c->filter_type );//  int filter_type;        // filtering type: 0 = simple, 1 = strong (only used
+                          // if filter_strength > 0 or autofilter > 0)
+                          
+  printf("autofilter = %d\n", c->autofilter );// int autofilter;         // Auto adjust filter's strength [0 = off, 1 = on]
+  
+  printf("alpha_compression = %d\n", c->alpha_compression );// int alpha_compression;  // Algorithm for encoding the alpha plane (0 = none,
+                          // 1 = compressed with WebP lossless). Default is 1.
+                          
+  printf("alpha_filtering = %d\n", c->alpha_filtering );// int alpha_filtering;    // Predictive filtering method for alpha plane.
+                          //  0: none, 1: fast, 2: best. Default if 1.
+                          
+  printf("alpha_quality = %d\n", c->alpha_quality );// int alpha_quality;      // Between 0 (smallest size) and 100 (lossless).
+                          // Default is 100.
+                          
+  printf("pass = %d\n", c->pass );  // int pass;               // number of entropy-analysis passes (in [1..10]).
+
+  printf("show_compressed = %d\n", c->show_compressed );// int show_compressed;    // if true, export the compressed picture back.
+                          // In-loop filtering is not applied.
+                          
+  printf("preprocessing = %d\n", c->preprocessing );// int preprocessing;      // preprocessing filter:
+                          // 0=none, 1=segment-smooth, 2=pseudo-random dithering
+  printf("partitions = %d\n", c->partitions );// int partitions;         // log2(number of token partitions) in [0..3]. Default
+                          // is set to 0 for easier progressive decoding.
+                          
+  printf("partition_limit = %d\n", c->partition_limit );// int partition_limit;    // quality degradation allowed to fit the 512k limit
+                          // on prediction modes coding (0: no degradation,
+                          // 100: maximum possible degradation).
+                          
+  printf("emulate_jpeg_size = %d\n", c->emulate_jpeg_size );// int emulate_jpeg_size;  // If true, compression parameters will be remapped
+                          // to better match the expected output size from
+                          // JPEG compression. Generally, the output size will
+                          // be similar but the degradation will be lower.
+                          
+  printf("thread_level = %d\n", c->thread_level );// int thread_level;       // If non-zero, try and use multi-threaded encoding.
+  
+  printf("low_memory = %d\n", c->low_memory );// int low_memory;         // If set, reduce memory usage (but increase CPU use).
+
+  printf("near_lossless = %d\n", c->near_lossless );// int near_lossless;      // Near lossless encoding [0 = max loss .. 100 = off
+                          // (default)].
+                          
+  printf("exact = %d\n", c->exact );// int exact;              // if non-zero, preserve the exact RGB values under
+                          // transparent area. Otherwise, discard this invisible
+                          // RGB information for better compression. The default
+                          // value is 0.
+
+  printf("use_delta_palette = %d\n", c->use_delta_palette );// int use_delta_palette;  // reserved for future lossless feature
+  
+  printf("use_sharp_yuv = %d\n", c->use_sharp_yuv );// int use_sharp_yuv;      // if needed, use sharp (and slow) RGB->YUV conversion
+ }
+ 
+ void savePicture(WebPPicture *p)
+ {
+   printf("\nPic structure:\n");
+   printf("use_argb = 0x%x\n", p->use_argb); //   int use_argb;
+   printf("colorspace = 0x%x\n", p->colorspace); //  WebPEncCSP colorspace: should be YUV420 for now (=Y'CbCr).
+   printf("width = %d, height = %d\n", p->width, p->height); //  int width, height;         // dimensions (less or equal to WEBP_MAX_DIMENSION)
+   printf("plane y = 0x%x\n", p->y);
+   printf("plane u = 0x%x\n", p->u);
+   printf("plane v = 0x%x\n", p->v); // uint8_t* y, *u, *v;        // pointers to luma/chroma planes.
+   
+  printf("y_stride = %d, uv_stride = %d\n", p->y_stride, p->uv_stride); // int y_stride, uv_stride;   // luma/chroma strides.
+  printf("plane a = 0x%x\n", p->a); //   uint8_t* a;                // pointer to the alpha plane
+  printf("y_stride = %d\n", p->a_stride); //  int a_stride;              // stride of the alpha plane
+  
+  printf("pad1[0] = %d\n", p->pad1[0]);
+  printf("pad1[1] = %d\n", p->pad1[1]); //   uint32_t pad1[2];          // padding for later use
+
+  // ARGB input (mostly used for input to lossless compression)
+  printf("argb = 0x%x\n", p->argb);  // uint32_t* argb;            // Pointer to argb (32 bit) plane.
+  printf("argb_stride = %d\n", p->argb_stride); //  int argb_stride;   // This is stride in pixels units, not bytes.
+  printf("pad2[0] = %d\n", p->pad2[0]);
+  printf("pad2[1] = %d\n", p->pad2[1]); 
+  printf("pad2[2] = %d\n", p->pad2[2]); // uint32_t pad2[3];          // padding for later use
+
+  //   OUTPUT
+  ///////////////
+  // Byte-emission hook, to store compressed bytes as they are ready.
+  printf("writer = 0x%x\n", p->writer); // WebPWriterFunction writer;  // can be NULL
+  printf("custom_ptr = 0x%x\n", p->custom_ptr); //   void* custom_ptr;           // can be used by the writer.
+
+  // map for extra information (only for lossy compression mode)
+  printf("extra_info_type = %d\n", p->extra_info_type);
+  //int extra_info_type;    // 1: intra type, 2: segment, 3: quant
+                          // 4: intra-16 prediction mode,
+                          // 5: chroma prediction mode,
+                          // 6: bit cost, 7: distortion
+  printf("extra_info = 0x%x\n", p->extra_info);
+  //uint8_t* extra_info;    // if not NULL, points to an array of size
+                          // ((width + 15) / 16) * ((height + 15) / 16) that
+                          // will be filled with a macroblock map, depending
+                          // on extra_info_type.
+
+  //   STATS AND REPORTS
+  ///////////////////////////
+  // Pointer to side statistics (updated only if not NULL)
+  printf("stats = 0x%x\n", p->stats); //  WebPAuxStats* stats;
+
+  // Error code for the latest error encountered during encoding
+  WebPEncodingError error_code;
+
+  // If not NULL, report progress during encoding.
+  WebPProgressHook progress_hook;
+
+  printf("user_data = 0x%x\n", p->user_data); //  void* user_data;        // this field is free to be set to any value and          // used during callbacks (like progress-report e.g.).
+
+  printf("pad3[0] = %d\n", p->pad3[0]);
+  printf("pad3[1] = %d\n", p->pad3[1]); 
+  printf("pad3[2] = %d\n", p->pad3[2]); // uint32_t pad3[3];          // padding for later use
+
+  // Unused for now
+  printf("pad4 = 0x%x\n", p->pad4);
+  printf("pad5 = 0x%x\n", p->pad5);
+  uint8_t* pad4, *pad5;
+  uint32_t pad6[8];       // padding for later use
+
+  // PRIVATE FIELDS
+  ////////////////////
+  printf("memory_ = 0x%x\n", p->memory_); //   void* memory_;          // row chunk of memory for yuva planes
+  printf("memory_argb_ = 0x%x\n", p->memory_argb_); //  void* memory_argb_;     // and for argb too.
+  void* pad7[2];          // padding for later use
+  printf("\n");
+ }
+#endif
+
+/*******************************************
+ *
+ *              Main Original
+ *
+ *******************************************/
+int main_original(int argc, const char* argv[]) {
   int return_value = -1;
   const char* in_file = NULL, *out_file = NULL, *dump_file = NULL;
   FILE* out = NULL;
@@ -897,6 +1054,10 @@ int main(int argc, const char* argv[]) {
 #endif
     } else if (!strcmp(argv[c], "-v")) {
       verbose = 1;
+#ifdef MV
+    } else if (!strcmp(argv[c], "-m")) {
+      // tolerate -m 
+#endif
     } else if (!strcmp(argv[c], "--")) {
       if (c < argc - 1) in_file = (const char*)GET_WARGV(argv, ++c);
       break;
@@ -1083,6 +1244,12 @@ int main(int argc, const char* argv[]) {
   if (verbose) {
     StopwatchReset(&stop_watch);
   }
+  
+#ifdef MV
+  saveConfig(&config);
+  savePicture(&picture);
+#endif
+  
   if (!WebPEncode(&config, &picture)) {
     fprintf(stderr, "Error! Cannot encode picture as WebP\n");
     fprintf(stderr, "Error code: %d (%s)\n",
@@ -1179,5 +1346,24 @@ int main(int argc, const char* argv[]) {
 
   FREE_WARGV_AND_RETURN(return_value);
 }
+
+int main(int argc, const char* argv[]) 
+{
+  int i;
+  int mv_mode = 0;
+  for (i = 0; i < argc; i++) {
+    if (strcmp(argv[i], "-m") == 0) {
+      mv_mode = 1;
+      break;
+    }
+  }
+  if (mv_mode) {
+    printf("MV mode\n\n");
+    return 0;
+  }
+
+  return main_original(argc, argv);
+}
+
 
 //------------------------------------------------------------------------------
